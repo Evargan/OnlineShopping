@@ -41,7 +41,7 @@ namespace TaskAuthenticationAuthorization
             {
                 opts.AddPolicy("MyDiscount", policy =>
                 {
-                    policy.RequireClaim("Type", "Golden", "Wholesale");
+                    policy.RequireClaim("Golden", "Wholesale");
                 });
             });
         }

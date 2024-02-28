@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using TaskAuthenticationAuthorization.Models;
 
 namespace TaskAuthenticationAuthorization.Controllers
 {
+    [Authorize]
     public class OrdersController : Controller
     {
         private readonly ShoppingContext _context;
@@ -21,8 +23,16 @@ namespace TaskAuthenticationAuthorization.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            var shoppingContext = _context.Orders.Include(o => o.Customer).Include(o => o.SuperMarket);
-            return View(await shoppingContext.ToListAsync());
+            if (User.IsInRole("admin"))
+            {
+                var orders = await _context.Orders.Include(o => o.Customer).Include(o => o.SuperMarket).ToListAsync();
+                return View(orders);
+            }
+            else
+            {
+                var orders = await _context.Orders.Include(o => o.Customer).Where(x => x.Customer.User.Email == User.Identity.Name).Include(o => o.SuperMarket).ToListAsync();
+                return View(orders);
+            }
         }
 
         // GET: Orders/Details/5
@@ -46,6 +56,7 @@ namespace TaskAuthenticationAuthorization.Controllers
         }
 
         // GET: Orders/Create
+        [Authorize(Roles = "admin")]
         public IActionResult Create()
         {
             ViewData["CustomerId"] = new SelectList(_context.Customers, "ID", "ID");
@@ -56,6 +67,7 @@ namespace TaskAuthenticationAuthorization.Controllers
         // POST: Orders/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,OrderDate,CustomerId,SuperMarketId")] Order order)
@@ -70,7 +82,7 @@ namespace TaskAuthenticationAuthorization.Controllers
             ViewData["SuperMarketId"] = new SelectList(_context.SuperMarkets, "ID", "ID", order.SuperMarketId);
             return View(order);
         }
-
+        [Authorize(Roles = "admin")]
         // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -92,6 +104,7 @@ namespace TaskAuthenticationAuthorization.Controllers
         // POST: Orders/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,OrderDate,CustomerId,SuperMarketId")] Order order)
@@ -125,7 +138,7 @@ namespace TaskAuthenticationAuthorization.Controllers
             ViewData["SuperMarketId"] = new SelectList(_context.SuperMarkets, "ID", "ID", order.SuperMarketId);
             return View(order);
         }
-
+        [Authorize(Roles = "admin")]
         // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -147,6 +160,7 @@ namespace TaskAuthenticationAuthorization.Controllers
         }
 
         // POST: Orders/Delete/5
+        [Authorize(Roles = "admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

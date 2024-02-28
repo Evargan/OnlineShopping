@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -160,6 +161,13 @@ namespace TaskAuthenticationAuthorization.Controllers
         private bool OrderDetailExists(int id)
         {
             return _context.OrderDetails.Any(e => e.Id == id);
+        }
+
+        [Authorize(Policy = "MyDiscount")]
+        public IActionResult MyDiscount()
+        {
+            var customer = _context.Customers.Include(o => o.User).First(x => x.User.Email == User.Identity.Name);
+            return View(customer);
         }
     }
 }
