@@ -9,90 +9,90 @@ using TaskAuthenticationAuthorization.Models;
 
 namespace TaskAuthenticationAuthorization.Controllers
 {
-    public class CustomersController : Controller
+    public class UsersController : Controller
     {
         private readonly ShoppingContext _context;
 
-        public CustomersController(ShoppingContext context)
+        public UsersController(ShoppingContext context)
         {
             _context = context;
         }
 
-        // GET: Customers
+        // GET: Users
         public async Task<IActionResult> Index()
         {
-            var shoppingContext = _context.Customers.Include(c => c.User);
+            var shoppingContext = _context.Users.Include(u => u.Role);
             return View(await shoppingContext.ToListAsync());
         }
 
-        // GET: Customers/Details/5
+        // GET: Users/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null || _context.Users == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (customer == null)
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (user == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(user);
         }
 
-        // GET: Customers/Create
+        // GET: Users/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Id");
             return View();
         }
 
-        // POST: Customers/Create
+        // POST: Users/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,LastName,FirstName,Address,Discount,UserId")] Customer customer)
+        public async Task<IActionResult> Create([Bind("Id,Email,Password,RoleId,Type")] User user)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(customer);
+                _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            return View(customer);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Id", user.RoleId);
+            return View(user);
         }
 
-        // GET: Customers/Edit/5
+        // GET: Users/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null || _context.Users == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
             {
                 return NotFound();
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            return View(customer);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Id", user.RoleId);
+            return View(user);
         }
 
-        // POST: Customers/Edit/5
+        // POST: Users/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstName,Address,Discount,UserId")] Customer customer)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Email,Password,RoleId,Type")] User user)
         {
-            if (id != customer.ID)
+            if (id != user.Id)
             {
                 return NotFound();
             }
@@ -101,12 +101,12 @@ namespace TaskAuthenticationAuthorization.Controllers
             {
                 try
                 {
-                    _context.Update(customer);
+                    _context.Update(user);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CustomerExists(customer.ID))
+                    if (!UserExists(user.Id))
                     {
                         return NotFound();
                     }
@@ -117,51 +117,51 @@ namespace TaskAuthenticationAuthorization.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            return View(customer);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Id", user.RoleId);
+            return View(user);
         }
 
-        // GET: Customers/Delete/5
+        // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null || _context.Users == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (customer == null)
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (user == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(user);
         }
 
-        // POST: Customers/Delete/5
+        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Customers == null)
+            if (_context.Users == null)
             {
-                return Problem("Entity set 'ShoppingContext.Customers'  is null.");
+                return Problem("Entity set 'ShoppingContext.Users'  is null.");
             }
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer != null)
+            var user = await _context.Users.FindAsync(id);
+            if (user != null)
             {
-                _context.Customers.Remove(customer);
+                _context.Users.Remove(user);
             }
             
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CustomerExists(int id)
+        private bool UserExists(int id)
         {
-          return _context.Customers.Any(e => e.ID == id);
+          return _context.Users.Any(e => e.Id == id);
         }
     }
 }
