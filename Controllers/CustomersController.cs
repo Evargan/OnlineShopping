@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,6 @@ using TaskAuthenticationAuthorization.Models;
 
 namespace TaskAuthenticationAuthorization.Controllers
 {
-    [Authorize(Roles = "admin")]
     public class CustomersController : Controller
     {
         private readonly ShoppingContext _context;
@@ -21,22 +19,48 @@ namespace TaskAuthenticationAuthorization.Controllers
         }
 
         // GET: Customers
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string searchString)
         {
-            var shoppingContext = _context.Customers.Include(c => c.User);
-            return View(await shoppingContext.ToListAsync());
+           
+            ViewData["NameSortParam"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["AddressSortParam"] = sortOrder == "Address" ? "address_desc" : "Address";
+            ViewData["CurrentFilter"] = searchString;
+            var customers = from s in _context.Customers
+                            select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                customers = customers.Where(s => s.LastName.Contains(searchString)
+                                       || s.FirstName.Contains(searchString));
+            }
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    customers = customers.OrderByDescending(s => s.LastName);
+                    break;
+                case "Address":
+                    customers = customers.OrderBy(s => s.Address);
+                    break;
+                case "address_desc":
+                    customers = customers.OrderByDescending(s => s.Address);
+                    break;
+                default:
+                    customers = customers.OrderBy(s => s.LastName);
+                    break;
+
+            }
+
+            return View(await customers.AsNoTracking().ToListAsync());
         }
 
         // GET: Customers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var customer = await _context.Customers
-                .Include(c => c.User)
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (customer == null)
             {
@@ -49,16 +73,15 @@ namespace TaskAuthenticationAuthorization.Controllers
         // GET: Customers/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
         // POST: Customers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,LastName,FirstName,Address,Discount,UserId")] Customer customer)
+        public async Task<IActionResult> Create([Bind("ID,LastName,FirstName,Address,Discount")] Customer customer)
         {
             if (ModelState.IsValid)
             {
@@ -66,14 +89,13 @@ namespace TaskAuthenticationAuthorization.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
             return View(customer);
         }
 
         // GET: Customers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -83,16 +105,15 @@ namespace TaskAuthenticationAuthorization.Controllers
             {
                 return NotFound();
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
             return View(customer);
         }
 
         // POST: Customers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstName,Address,Discount,UserId")] Customer customer)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstName,Address,Discount")] Customer customer)
         {
             if (id != customer.ID)
             {
@@ -119,20 +140,18 @@ namespace TaskAuthenticationAuthorization.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
             return View(customer);
         }
 
         // GET: Customers/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var customer = await _context.Customers
-                .Include(c => c.User)
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (customer == null)
             {
@@ -147,23 +166,15 @@ namespace TaskAuthenticationAuthorization.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Customers == null)
-            {
-                return Problem("Entity set 'ShoppingContext.Customers'  is null.");
-            }
             var customer = await _context.Customers.FindAsync(id);
-            if (customer != null)
-            {
-                _context.Customers.Remove(customer);
-            }
-            
+            _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CustomerExists(int id)
         {
-          return _context.Customers.Any(e => e.ID == id);
+            return _context.Customers.Any(e => e.ID == id);
         }
     }
 }

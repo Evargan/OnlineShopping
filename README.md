@@ -1,8 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/Q5ZFIAJN)
-# Sprint18.-Authentication-Authorization
-### The structure of the project is the same as in previous two sprints.
-### Please, differentiate access to the resources as described:
-###  
 
 1. All users are allowed to see pages products and supermarkets
 2. Only user with role "admin" can create/edit/delete supermarket
@@ -19,5 +14,3 @@
 12. **Implement Admin tab that is available only to users with Admin role.  On this tab user with an "admin" role can*
 	* See the list of all users
 	* Edit any user - ability to change his role and claim buyerType
-# 	
-*Note: if some action or view is forbidden for user, corresponding links or tabs should be hidden and action shouln't be accessible neither via link nor via url*
